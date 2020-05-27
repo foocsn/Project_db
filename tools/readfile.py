@@ -10,7 +10,9 @@
 # 表的列名
 # 数据
 
-#
+"""
+注意：读取cvs文件，在第6行“Report compiled on 星期四 五月 14 2020”有可能会出错，utf-8无法解码！
+"""
 import csv
 import re
 import logging
@@ -24,7 +26,7 @@ def read_file(csv_filename):
     returns: data + column's name
     """
     
-    database = csv_filename[:-11] #数据库名称
+    database = csv_filename[-14:-11] #数据库名称
     print(f'正在读取{csv_filename}...')
     data = {} #数据
     cols_name = {} #列名
@@ -33,8 +35,14 @@ def read_file(csv_filename):
     b = False #数据块开始标志
     try:
         with open(csv_filename,'r')  as f:
-            reader = csv.reader(f,delimiter=',')
-            reader = list(reader)
+            try:
+                reader = csv.reader(f,delimiter=',')
+                [next(reader) for _ in range(20)]
+                reader = list(reader)
+            except Exception as e:
+                print(e)
+                print(f'读取csv文件{csv_filename}出错！(有可能是编码错误！)')
+                return None
             for i,row in enumerate(reader):
                 #已经在读数据
                 if b and now!=None:
@@ -55,6 +63,7 @@ def read_file(csv_filename):
                     if now == None:
                         if row[0] =='-------------------------':
                             now = reader[i-1][0]
+                            now = now.replace(' ','_')
                             cols_name[now] = []
                             continue
                     else:
@@ -67,12 +76,14 @@ def read_file(csv_filename):
                         b = True
                         data[now] = []
     except Exception as e:
-        logging.warning(f'读取{csv_filename}出错！')
-        return None,None
+        print(e)
+        logging.warning(f'读取csv文件{csv_filename}出错！(有可能是编码错误！)')
+        return None
     print(f'读取{csv_filename}完成！')
     return database,data,cols_name
             
 if __name__ == '__main__':
-    data,cols_name = read_file('CZ72006001.csv')
+    database,data,cols_name=read_file('/Users/likevin/Desktop/Project_db/Database/CZ72006001.csv')
     print(data['Airports'][0])
-    print(cols_name['Airports'])
+    # print(data['Airports'][0])
+    # print(cols_name['Airports'])
