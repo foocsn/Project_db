@@ -37,7 +37,39 @@ def dump_to_db(files):
         except Exception as e:
             print(f'创建数据库{database}失败')
             continue
-        
+        sql = 'use ' + database
+        cursor.execute(sql)
+        for table_name in data:
+            #创建表
+            sql = f'create table `{table_name}` (`id` int not null auto_increment, '
+            for col in cols_name[table_name]:
+                sql += f'`{col}` varchar(45),'
+            sql += 'primary key (`id`) )'
+            try:
+                cursor.execute(sql)
+            except Exception  as e:
+                print(f'创建表{table_name}失败！')
+                cursor.rollback()
+                continue
+            #写入数据
+            for rows in data[table_name]:
+                sql = f"insert into `{table_name}` ("
+                for col in cols_name[table_name]:
+                    sql += f"`{col}`,"
+                sql += ") values ("
+                for d in rows:
+                    for index,i in enumerate(d):
+                        sql += f"'{i}',"
+                    sql += ')'
+                    try : 
+                        cursor.execute(sql)
+                    except Exception as e:
+                        print('插入数据失败！')
+                        cursor.rollback()
+                        break
+        connection.commit()
+
+
 
 
 
