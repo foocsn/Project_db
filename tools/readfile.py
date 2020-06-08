@@ -38,9 +38,10 @@ def read_file(csv_filename):
             try:
                 reader = csv.reader(f,delimiter=',')
                 [next(reader) for _ in range(20)]
+
                 reader = list(reader)
             except Exception as e:
-                print(e)
+                raise e
                 print(f'读取csv文件{csv_filename}出错！(有可能是编码错误！)')
                 return None
             for i,row in enumerate(reader):
@@ -61,7 +62,7 @@ def read_file(csv_filename):
                 #还没有获取数据
                 else:
                     if now == None:
-                        if row[0] =='-------------------------':
+                        if row!=[] and row[0] =='-------------------------':
                             now = reader[i-1][0]
                             now = now.replace(' ','_')
                             cols_name[now] = []
@@ -76,8 +77,7 @@ def read_file(csv_filename):
                         b = True
                         data[now] = []
     except Exception as e:
-        print(e)
-        logging.warning(f'读取csv文件{csv_filename}出错！(有可能是编码错误！)')
+        raise e
         return None
     print(f'读取{csv_filename}完成！')
     return database,data,cols_name

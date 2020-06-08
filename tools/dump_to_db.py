@@ -10,6 +10,7 @@ import sys
 import pymysql
 from readfile import read_file
 import asyncio
+import re
 import configparser
 
 root = os.getcwd()
@@ -24,13 +25,19 @@ except Exception as e:
     print('请核对数据库用户名和密码(config文件中)')
 
 def _read_files(dir):
-	try:
-		files = os.listdir(databases_dir)
-	except Exception as e:
-		raise e
-		return None
-	finally:
-		return files
+    try:
+        files = os.listdir(databases_dir)
+        res = []
+        for i in range(len(files)):
+            if re.match(r'.*\.csv',files[i]):
+                res.append(files[i])
+
+
+    except Exception as e:
+        raise e
+        return None
+    else:
+        return res
 
 
 
@@ -53,16 +60,22 @@ def dump_to_db(host='localhost',port=3306):
     if not files:
         print('Database文件夹为空')
         return None
+    #读取所有数据库
+    query = "show databases"
+    cursor.execute(query)
+    _databases = cursor.fetchall()
     for file in files:
         try:
             database,data,cols_name = read_file(os.path.join(databases_dir,file))
         except Exception as e:
+            raise e
             print(f'处理{file}出错！')
+            continue
+        if (database,) in _databases:
+            print(f"数据库{database}已存在")
             continue
         # 创建数据库
         try:
-            sql = "drop database if exists "+f"{database}"
-            cursor.execute(sql)
             sql = "create database " + f"`{database}`"
             cursor.execute(sql)
         except Exception as e:
@@ -99,7 +112,8 @@ def dump_to_db(host='localhost',port=3306):
                     base_sql += ") values ("
                     sql = ""
                     for d in rows:
-                        sql += f"'{d}',"
+                        d = d.replace("'","\\'")
+                        sql += f"'{d}'," #机场信息里面带有"'"
                     sql = sql[:-1]
                     sql += ")"
                     try : 
@@ -120,10 +134,5 @@ def dump_to_db(host='localhost',port=3306):
     connection.close()
 
 
-
-
-
-
 if __name__ == '__main__':
     dump_to_db()
-
