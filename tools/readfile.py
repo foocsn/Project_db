@@ -23,7 +23,7 @@ import logging
 def read_file(csv_filename):
     """
     paras: csv_filename
-    returns: data + column's name
+    returns: database + data +column's name
     """
     
     database = csv_filename[-14:-11] #数据库名称
@@ -57,7 +57,7 @@ def read_file(csv_filename):
                         # print('\r')
                         continue
                     #已经获取了列
-                    data[now].append(row[:len(cols_name[now])-1]+['from_'+database])
+                    data[now].append(row[:len(cols_name[now])-1]+['series'])
                 
                 #还没有获取数据
                 else:
